@@ -29,6 +29,7 @@ jobs:
       - name: Install TeX and dependencies
         run: |
           brew install --cask mactex
+          sudo tlmgr path add
           export PATH="/Library/TeX/texbin:$PATH"
 
       # Generate PDF
