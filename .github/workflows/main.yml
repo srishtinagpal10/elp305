@@ -6,11 +6,11 @@ on:
       - 'main.tex'
 
 jobs:
-  job-name:
-    permissions:
-      contents: write
   build:
     runs-on: macos-latest
+
+    permissions:
+      contents: write
 
     steps:
       # Checkout the repository
@@ -47,14 +47,13 @@ jobs:
           VERSION=$(cat .version)
           CHANGES=$(git diff HEAD~1 --numstat main.tex | awk '{print $1 + $2}')
           if [ "$CHANGES" -gt 0 ]; then
-            # Increment version (you can adjust this logic)
             VERSION_MAJOR=$(echo $VERSION | cut -d'.' -f1)
             VERSION_MINOR=$(echo $VERSION | cut -d'.' -f2)
-            VERSION_MINOR=$((VERSION_MINOR + 0.1))
+            VERSION_MINOR=$((VERSION_MINOR + 1))
             VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
           fi
           echo $VERSION > .version
-          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" # Output version for debugging
 
       # Generate PDF
@@ -73,7 +72,7 @@ jobs:
           mv main.tex "output-${VERSION}.tex"
           mv main.html "output-${VERSION}.html"
 
-      # Upload generated files as artifacts
+      # Commit and push generated files
       - name: Commit and push generated files
         run: |
           git config --global user.name "GitHub Actions"
@@ -81,4 +80,3 @@ jobs:
           git add .
           git commit -m "Add generated files for version $VERSION"
           git push origin main
-
