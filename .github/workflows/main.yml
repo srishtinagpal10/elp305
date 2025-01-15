@@ -6,6 +6,9 @@ on:
       - 'main.tex'
 
 jobs:
+  job-name:
+    permissions:
+      contents: write
   build:
     runs-on: macos-latest
 
