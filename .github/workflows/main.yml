@@ -38,12 +38,21 @@ jobs:
       - name: Calculate version number
         id: version
         run: |
-          if [ ! -f .version ]; then echo "0" > .version; fi
-          PREV_VERSION=$(cat .version)
+          if [ ! -f .version ]; then 
+            echo "1.1" > .version
+          fi
+          VERSION=$(cat .version)
           CHANGES=$(git diff HEAD~1 --numstat main.tex | awk '{print $1 + $2}')
-          NEW_VERSION=$((PREV_VERSION + CHANGES))
-          echo $NEW_VERSION > .version
-          echo "version=$NEW_VERSION" >> $GITHUB_ENV
+          if [ "$CHANGES" -gt 0 ]; then
+            # Increment version (you can adjust this logic)
+            VERSION_MAJOR=$(echo $VERSION | cut -d'.' -f1)
+            VERSION_MINOR=$(echo $VERSION | cut -d'.' -f2)
+            VERSION_MINOR=$((VERSION_MINOR + 0.1))
+            VERSION="${VERSION_MAJOR}.${VERSION_MINOR}"
+          fi
+          echo $VERSION > .version
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" # Output version for debugging
 
       # Generate PDF
       - name: Generate PDF
@@ -56,9 +65,10 @@ jobs:
       # Rename files with version number
       - name: Rename files
         run: |
-          mv main.pdf "output-${version}.pdf"
-          mv main.tex "output-${version}.tex"
-          mv main.html "output-${version}.html"
+          VERSION=$(cat .version)
+          mv main.pdf "output-${VERSION}.pdf"
+          mv main.tex "output-${VERSION}.tex"
+          mv main.html "output-${VERSION}.html"
 
       # Upload generated files as artifacts
       - name: Upload artifacts
@@ -66,6 +76,6 @@ jobs:
         with:
           name: generated-files
           path: |
-            output-${version}.pdf
-            output-${version}.tex
-            output-${version}.html
+            output-$(cat .version).pdf
+            output-$(cat .version).tex
+            output-$(cat .version).html
