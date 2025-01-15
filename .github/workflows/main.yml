@@ -14,15 +14,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Install MacTeX (TeX Live distribution)
+      # Cache MacTeX installation to speed up future runs
+      - name: Cache MacTeX
+        uses: actions/cache@v3
+        with:
+          path: /Library/TeX
+          key: macos-mactex-${{ runner.os }}-${{ hashFiles('main.tex') }}
+          restore-keys: |
+            macos-mactex-${{ runner.os }}-
+
+      # Install MacTeX if not cached
       - name: Install MacTeX
         run: |
-          brew install --cask mactex
+          if [ ! -d "/Library/TeX/texbin" ]; then
+            brew install --cask mactex
+          fi
 
-      # Add MacTeX binaries to PATH
+      # Add MacTeX to PATH
       - name: Add MacTeX to PATH
-        run: |
-          echo "/Library/TeX/texbin" >> $GITHUB_ENV
+        run: echo "/Library/TeX/texbin" >> $GITHUB_PATH
 
       # Calculate version number based on changes
       - name: Calculate version number
@@ -34,7 +44,6 @@ jobs:
           NEW_VERSION=$((PREV_VERSION + CHANGES))
           echo $NEW_VERSION > .version
           echo "version=$NEW_VERSION" >> $GITHUB_ENV
-      
 
       # Generate PDF
       - name: Generate PDF
