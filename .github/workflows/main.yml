@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Install MacTeX (TeX Live distribution)
+      - name: Install MacTeX
+        run: |
+          brew install --cask mactex
+
       # Calculate version number based on changes
       - name: Calculate version number
         id: version
@@ -24,13 +29,7 @@ jobs:
           NEW_VERSION=$((PREV_VERSION + CHANGES))
           echo $NEW_VERSION > .version
           echo "version=$NEW_VERSION" >> $GITHUB_ENV
-
-      # Install necessary tools
-      # - name: Install TeX and dependencies
-      #   run: |
-      #     brew install --cask mactex
-      #     sudo tlmgr path add
-      #     export PATH="/Library/TeX/texbin:$PATH"
+      
 
       # Generate PDF
       - name: Generate PDF
