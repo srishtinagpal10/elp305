@@ -1,0 +1,57 @@
+name: Generate PDF, TeX, and HTML
+
+on:
+  push:
+    paths:
+      - 'main.tex'
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Calculate version number based on changes
+      - name: Calculate version number
+        id: version
+        run: |
+          if [ ! -f .version ]; then echo "0" > .version; fi
+          PREV_VERSION=$(cat .version)
+          CHANGES=$(git diff HEAD~1 --numstat main.tex | awk '{print $1 + $2}')
+          NEW_VERSION=$((PREV_VERSION + CHANGES))
+          echo $NEW_VERSION > .version
+          echo "version=$NEW_VERSION" >> $GITHUB_ENV
+
+      # Install necessary tools
+      - name: Install TeX and dependencies
+        run: |
+          brew install --cask mactex
+          export PATH="/Library/TeX/texbin:$PATH"
+
+      # Generate PDF
+      - name: Generate PDF
+        run: pdflatex -interaction=nonstopmode main.tex
+
+      # Generate HTML
+      - name: Generate HTML
+        run: htlatex main.tex
+
+      # Rename files with version number
+      - name: Rename files
+        run: |
+          mv main.pdf "output-${version}.pdf"
+          mv main.tex "output-${version}.tex"
+          mv main.html "output-${version}.html"
+
+      # Upload generated files as artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated-files
+          path: |
+            output-${version}.pdf
+            output-${version}.tex
+            output-${version}.html
